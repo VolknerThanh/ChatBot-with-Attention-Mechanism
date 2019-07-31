@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CHAT BOT</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <!--<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='func.css') }}">-->
+</head>
+<body>
+
+    <h1 class="title _title">CHAT BOT</h1>
+
+    <div class="container">
+        <form action="" method="post" role="form">
+            <div class="form-group">
+                <div class="row">
+
+                    <input type="text"
+                           class="col-md-6 offset-md-3 _input form-control DisplayFlex"
+                           id="input_value"
+                           name="input_value"
+                           placeholder="type at here ..."
+                           required
+                    >
+                    <button type="submit"
+                            id="btn-submit"
+                            class="offset-md-3 btn btn-info DisplayFlex"
+                            style="margin-top: 20px;"
+                            onclick="this.form.submit(); this.disabled=true; this.value='Sending…'; ">
+                        Send
+                    </button>
+                </div>
+            </div>
+         </form>
+        <br>
+        <hr>
+        <br>
+        {% if res %}
+            <script>
+                var btn = document.getElementById('btn-submit');
+                btn.disable = False;
+                btn.innerHTML = "Send";
+            </script>
+        {% endif %}
+        <div class="row">
+            <span class="offset-md-3">
+                {% if input_content %}
+                    <b>Input: </b><i>"{{ input_content }}"</i>
+                {% else %}
+                    <br>
+                {% endif %}
+            </span>
+        </div>
+        <br>
+        <div class="row">
+            <span class="offset-md-3">
+                <b>Bot: </b><i>"{{ res }}"</i>
+            </span>
+        </div>
+
+
+
+    </div>
+</body>
+</html>

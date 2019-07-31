@@ -97,10 +97,11 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import torch
+from torch.jit import script, trace
 import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
-# import csv
+import csv
 import random
 import re
 import os
@@ -108,7 +109,7 @@ import unicodedata
 import codecs
 from io import open
 import itertools
-# import math
+import math
 
 
 USE_CUDA = torch.cuda.is_available()
@@ -1154,14 +1155,14 @@ batch_size = 64
 # Set checkpoint to load from; set to None if starting from scratch
 loadFilename = None
 checkpoint_iter = 4000
-# uncomment cai nay neu da train roi
-loadFilename = os.path.join(save_dir, model_name, corpus_name,
-                           '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size),
-                           '{}_checkpoint.tar'.format(checkpoint_iter))
 
 loadFilename = os.path.join(save_dir, model_name, corpus_name,
                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size),
                            '{}_checkpoint.tar'.format(checkpoint_iter))
+
+# loadFilename = os.path.join(save_dir, model_name, corpus_name,
+#                            '{}-{}_{}'.format(encoder_n_layers, decoder_n_layers, hidden_size),
+#                            '{}_checkpoint.tar'.format(checkpoint_iter))
 
 
 # Load model if a loadFilename is provided
@@ -1260,7 +1261,7 @@ decoder.eval()
 searcher = GreedySearchDecoder(encoder, decoder)
 
 # Begin chatting (uncomment and run the following line to begin)
-evaluateInput(encoder, decoder, searcher, voc)
+# evaluateInput(encoder, decoder, searcher, voc)
 
 
 ######################################################################
@@ -1287,29 +1288,54 @@ def normalizeStringv2(s):
 import flask
 from flask_cors import CORS
 from flask import Flask, render_template, json, request
+from wtforms import Form
+
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+app.config['SECRET_KEY'] = '0d38ae4150f11f348396cefafefe1294'
 CORS(app)
+
 @app.after_request
 def after_request(response):
   response.headers.add('Access-Control-Allow-Origin', '*')
   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
   response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
   return response
-@app.route('/chatbot/<message>', methods=['GET'])
-def home(message):
-        try:
-            # Get input sentence
-            input_sentence = message
-            # Normalize sentence
-            input_sentence = normalizeString(input_sentence)
-            # Evaluate sentence
-            output_words = evaluate(encoder, decoder, searcher, voc, input_sentence)
-            # Format and print response sentence
-            output_words[:] = [x for x in output_words if not (x == 'EOS' or x == 'PAD')]
-            return ' '.join(output_words)
-        except KeyError:
-            errorMess = 'Error: Encountered unknown word.'
-            return errorMess
 
-app.run(None, 3333)
+
+def processing(message):
+    try:
+        # Get input sentence
+        input_sentence = message
+        # Normalize sentence
+        input_sentence = normalizeString(input_sentence)
+        # Evaluate sentence
+        output_words = evaluate(encoder, decoder, searcher, voc, input_sentence)
+        # Format and print response sentence
+        output_words[:] = [x for x in output_words if not (x == 'EOS' or x == 'PAD')]
+        return ' '.join(output_words)
+    except KeyError:
+        errorMess = 'Error: Encountered unknown word.'
+        return errorMess
+
+class InputForm(Form):
+
+    @app.route('/', methods=['GET', 'POST'])
+    def home():
+        form = InputForm(request.form)
+        result = ''
+        original = ""
+
+        if request.method == 'POST':
+            message = request.form['input_value']
+            original = message
+
+            result = processing(message)
+            print(result)
+
+        return render_template('chatbot.html', form=form, res=result, input_content=original )
+
+
+
+
+app.run(None, 3000)
